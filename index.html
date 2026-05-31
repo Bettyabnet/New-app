@@ -1,0 +1,429 @@
+import React, { useState, useEffect } from ‘react’;
+import { Trash2, Plus, Edit2, Check, X } from ‘lucide-react’;
+
+export default function MaterialManager() {
+const [materials, setMaterials] = useState([]);
+const [isAddingNew, setIsAddingNew] = useState(false);
+const [editingId, setEditingId] = useState(null);
+const [newMaterial, setNewMaterial] = useState({ name: ‘’, price: ‘’ });
+const [searchTerm, setSearchTerm] = useState(’’);
+
+// Load materials from localStorage on mount
+useEffect(() => {
+const savedMaterials = localStorage.getItem(‘materials’);
+if (savedMaterials) {
+setMaterials(JSON.parse(savedMaterials));
+} else {
+// Default materials
+const defaultMaterials = [
+{ id: 1, name: ‘Lee Streach’, price: 284 },
+{ id: 2, name: ‘KT’, price: 247 },
+{ id: 3, name: ‘DxT Lemut’, price: 240 },
+{ id: 4, name: ‘LW’, price: 255 },
+{ id: 5, name: ‘LW Print’, price: 270 },
+{ id: 6, name: ‘DxT Print Free’, price: 250 },
+{ id: 7, name: ‘DxT Print Lee’, price: 262 },
+{ id: 8, name: ‘Double Face’, price: 240 },
+{ id: 9, name: ‘Double Face Print’, price: 255 },
+{ id: 10, name: ‘Square’, price: 265 },
+{ id: 11, name: ‘FM Print’, price: 270 },
+];
+setMaterials(defaultMaterials);
+localStorage.setItem(‘materials’, JSON.stringify(defaultMaterials));
+}
+}, []);
+
+// Save materials to localStorage
+const saveMaterials = (updatedMaterials) => {
+setMaterials(updatedMaterials);
+localStorage.setItem(‘materials’, JSON.stringify(updatedMaterials));
+};
+
+const addMaterial = () => {
+if (newMaterial.name.trim() && newMaterial.price) {
+const material = {
+id: Date.now(),
+name: newMaterial.name.trim(),
+price: parseFloat(newMaterial.price),
+};
+saveMaterials([…materials, material]);
+setNewMaterial({ name: ‘’, price: ‘’ });
+setIsAddingNew(false);
+}
+};
+
+const deleteMaterial = (id) => {
+saveMaterials(materials.filter(m => m.id !== id));
+};
+
+const updateMaterial = (id, updatedName, updatedPrice) => {
+saveMaterials(
+materials.map(m =>
+m.id === id
+? { …m, name: updatedName.trim(), price: parseFloat(updatedPrice) }
+: m
+)
+);
+setEditingId(null);
+};
+
+const filteredMaterials = materials.filter(m =>
+m.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+return (
+<div style={{ minHeight: ‘100vh’, background: ‘linear-gradient(135deg, #667eea 0%, #764ba2 100%)’, padding: ‘32px 16px’ }}>
+<div style={{ maxWidth: ‘900px’, margin: ‘0 auto’ }}>
+{/* Header */}
+<div style={{ textAlign: ‘center’, marginBottom: ‘32px’ }}>
+<h1 style={{ fontSize: ‘36px’, fontWeight: ‘700’, color: ‘white’, margin: ‘0 0 12px 0’ }}>
+Material Price Manager
+</h1>
+<p style={{ fontSize: ‘14px’, color: ‘rgba(255,255,255,0.9)’, margin: 0 }}>
+Manage your materials and prices - Add, Edit, Delete
+</p>
+</div>
+
+```
+    {/* Main Container */}
+    <div style={{ backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+      {/* Search Bar */}
+      <div style={{ padding: '20px', borderBottom: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
+        <input
+          type="text"
+          placeholder="Search materials..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '12px 16px',
+            fontSize: '14px',
+            border: '2px solid #e0e0e0',
+            borderRadius: '8px',
+            transition: 'border-color 0.2s',
+            boxSizing: 'border-box',
+          }}
+          onFocus={(e) => e.target.style.borderColor = '#667eea'}
+          onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+        />
+      </div>
+
+      {/* Materials List */}
+      <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+        {filteredMaterials.length === 0 && !isAddingNew ? (
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#999' }}>
+            <p style={{ fontSize: '16px', margin: 0 }}>No materials found</p>
+          </div>
+        ) : (
+          <div>
+            {filteredMaterials.map((material) => (
+              <MaterialRow
+                key={material.id}
+                material={material}
+                isEditing={editingId === material.id}
+                onEdit={() => setEditingId(material.id)}
+                onUpdate={updateMaterial}
+                onDelete={deleteMaterial}
+                onCancel={() => setEditingId(null)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Add New Material Section */}
+      {isAddingNew && (
+        <div style={{ padding: '20px', borderTop: '1px solid #f0f0f0', backgroundColor: '#f9f9f9' }}>
+          <AddMaterialForm
+            newMaterial={newMaterial}
+            setNewMaterial={setNewMaterial}
+            onAdd={addMaterial}
+            onCancel={() => setIsAddingNew(false)}
+          />
+        </div>
+      )}
+
+      {/* Add Button */}
+      {!isAddingNew && (
+        <div style={{ padding: '16px', borderTop: '1px solid #f0f0f0', backgroundColor: '#f9f9f9' }}>
+          <button
+            onClick={() => setIsAddingNew(true)}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'white',
+              backgroundColor: '#667eea',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              transition: 'background-color 0.2s',
+            }}
+            onHover={(e) => e.target.style.backgroundColor = '#5568d3'}
+          >
+            <Plus size={18} /> Add New Material
+          </button>
+        </div>
+      )}
+    </div>
+
+    {/* Summary Stats */}
+    <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <StatCard label="Total Materials" value={materials.length} />
+      <StatCard
+        label="Average Price"
+        value={materials.length > 0 ? (materials.reduce((sum, m) => sum + m.price, 0) / materials.length).toFixed(2) + ' Birr' : 'N/A'}
+      />
+      <StatCard
+        label="Highest Price"
+        value={materials.length > 0 ? Math.max(...materials.map(m => m.price)) + ' Birr' : 'N/A'}
+      />
+    </div>
+  </div>
+</div>
+```
+
+);
+}
+
+function MaterialRow({ material, isEditing, onEdit, onUpdate, onDelete, onCancel }) {
+const [editName, setEditName] = useState(material.name);
+const [editPrice, setEditPrice] = useState(material.price.toString());
+
+return (
+<div
+style={{
+padding: ‘16px 20px’,
+borderBottom: ‘1px solid #f0f0f0’,
+display: ‘flex’,
+alignItems: ‘center’,
+gap: ‘12px’,
+backgroundColor: ‘white’,
+transition: ‘background-color 0.2s’,
+fontSize: ‘3px’,
+}}
+onMouseEnter={(e) => !isEditing && (e.currentTarget.style.backgroundColor = ‘#f5f5f5’)}
+onMouseLeave={(e) => !isEditing && (e.currentTarget.style.backgroundColor = ‘white’)}
+>
+{isEditing ? (
+<>
+<input
+type=“text”
+value={editName}
+onChange={(e) => setEditName(e.target.value)}
+style={{
+flex: 1,
+padding: ‘8px 12px’,
+fontSize: ‘14px’,
+border: ‘2px solid #667eea’,
+borderRadius: ‘4px’,
+boxSizing: ‘border-box’,
+}}
+/>
+<input
+type=“number”
+value={editPrice}
+onChange={(e) => setEditPrice(e.target.value)}
+style={{
+width: ‘100px’,
+padding: ‘8px 12px’,
+fontSize: ‘14px’,
+border: ‘2px solid #667eea’,
+borderRadius: ‘4px’,
+boxSizing: ‘border-box’,
+}}
+/>
+<button
+onClick={() => onUpdate(material.id, editName, editPrice)}
+title=“Save”
+style={{
+width: ‘36px’,
+height: ‘36px’,
+padding: 0,
+backgroundColor: ‘#4CAF50’,
+color: ‘white’,
+border: ‘none’,
+borderRadius: ‘6px’,
+cursor: ‘pointer’,
+display: ‘flex’,
+alignItems: ‘center’,
+justifyContent: ‘center’,
+transition: ‘background-color 0.2s’,
+}}
+>
+<Check size={18} />
+</button>
+<button
+onClick={onCancel}
+title=“Cancel”
+style={{
+width: ‘36px’,
+height: ‘36px’,
+padding: 0,
+backgroundColor: ‘#f44336’,
+color: ‘white’,
+border: ‘none’,
+borderRadius: ‘6px’,
+cursor: ‘pointer’,
+display: ‘flex’,
+alignItems: ‘center’,
+justifyContent: ‘center’,
+transition: ‘background-color 0.2s’,
+}}
+>
+<X size={18} />
+</button>
+</>
+) : (
+<>
+<div style={{ flex: 1 }}>
+<div style={{ fontSize: ‘16px’, fontWeight: ‘600’, color: ‘#333’, marginBottom: ‘4px’ }}>
+{material.name}
+</div>
+</div>
+<div style={{ fontSize: ‘18px’, fontWeight: ‘700’, color: ‘#667eea’, minWidth: ‘80px’, textAlign: ‘right’ }}>
+{material.price} Birr
+</div>
+<button
+onClick={() => onEdit()}
+title=“Edit”
+style={{
+width: ‘36px’,
+height: ‘36px’,
+padding: 0,
+backgroundColor: ‘#2196F3’,
+color: ‘white’,
+border: ‘none’,
+borderRadius: ‘6px’,
+cursor: ‘pointer’,
+display: ‘flex’,
+alignItems: ‘center’,
+justifyContent: ‘center’,
+transition: ‘background-color 0.2s’,
+}}
+>
+<Edit2 size={18} />
+</button>
+<button
+onClick={() => onDelete(material.id)}
+title=“Delete”
+style={{
+width: ‘36px’,
+height: ‘36px’,
+padding: 0,
+backgroundColor: ‘#f44336’,
+color: ‘white’,
+border: ‘none’,
+borderRadius: ‘6px’,
+cursor: ‘pointer’,
+display: ‘flex’,
+alignItems: ‘center’,
+justifyContent: ‘center’,
+transition: ‘background-color 0.2s’,
+}}
+>
+<Trash2 size={18} />
+</button>
+</>
+)}
+</div>
+);
+}
+
+function AddMaterialForm({ newMaterial, setNewMaterial, onAdd, onCancel }) {
+return (
+<div style={{ display: ‘flex’, gap: ‘12px’, flexWrap: ‘wrap’ }}>
+<input
+type=“text”
+placeholder=“Material name”
+value={newMaterial.name}
+onChange={(e) => setNewMaterial({ …newMaterial, name: e.target.value })}
+style={{
+flex: 1,
+minWidth: ‘150px’,
+padding: ‘10px 12px’,
+fontSize: ‘14px’,
+border: ‘2px solid #e0e0e0’,
+borderRadius: ‘6px’,
+transition: ‘border-color 0.2s’,
+boxSizing: ‘border-box’,
+}}
+onFocus={(e) => e.target.style.borderColor = ‘#667eea’}
+onBlur={(e) => e.target.style.borderColor = ‘#e0e0e0’}
+/>
+<input
+type=“number”
+placeholder=“Price (Birr)”
+value={newMaterial.price}
+onChange={(e) => setNewMaterial({ …newMaterial, price: e.target.value })}
+style={{
+width: ‘120px’,
+padding: ‘10px 12px’,
+fontSize: ‘14px’,
+border: ‘2px solid #e0e0e0’,
+borderRadius: ‘6px’,
+transition: ‘border-color 0.2s’,
+boxSizing: ‘border-box’,
+}}
+onFocus={(e) => e.target.style.borderColor = ‘#667eea’}
+onBlur={(e) => e.target.style.borderColor = ‘#e0e0e0’}
+/>
+<button
+onClick={onAdd}
+style={{
+padding: ‘10px 20px’,
+fontSize: ‘14px’,
+fontWeight: ‘600’,
+color: ‘white’,
+backgroundColor: ‘#4CAF50’,
+border: ‘none’,
+borderRadius: ‘6px’,
+cursor: ‘pointer’,
+transition: ‘background-color 0.2s’,
+}}
+>
+Save Material
+</button>
+<button
+onClick={onCancel}
+style={{
+padding: ‘10px 20px’,
+fontSize: ‘14px’,
+fontWeight: ‘600’,
+color: ‘#666’,
+backgroundColor: ‘#e0e0e0’,
+border: ‘none’,
+borderRadius: ‘6px’,
+cursor: ‘pointer’,
+transition: ‘background-color 0.2s’,
+}}
+>
+Cancel
+</button>
+</div>
+);
+}
+
+function StatCard({ label, value }) {
+return (
+<div style={{
+backgroundColor: ‘white’,
+padding: ‘20px’,
+borderRadius: ‘12px’,
+boxShadow: ‘0 4px 12px rgba(0,0,0,0.1)’,
+textAlign: ‘center’,
+}}>
+<div style={{ fontSize: ‘12px’, color: ‘#999’, fontWeight: ‘600’, marginBottom: ‘8px’ }}>
+{label}
+</div>
+<div style={{ fontSize: ‘24px’, fontWeight: ‘700’, color: ‘#667eea’ }}>
+{value}
+</div>
+</div>
+);
+}
